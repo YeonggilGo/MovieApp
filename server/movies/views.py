@@ -1,18 +1,56 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
-from .fixtures.MakeMovieData import URLMaker
-from .models import Movie, Prefer
-from .serializers import MovieSerializer
 
 import requests
 import random
 from itertools import combinations as coms
-from functools import reduce
+from django.db.models import Q
+
+from .models import Movie, Prefer, Genre
+from .serializers import MovieSerializer
+
+
+class URLMaker:
+    key = "26098e52c62da6e76a55e7bd6d69635e"
+
+    def __init__(self):
+        self.url = ""
+
+    def getMovies(self, i):
+        return f'https://api.themoviedb.org/3/movie/popular?api_key={self.key}&language=ko-KR&page={i}'
+
+    def getGenres(self):
+        return f'https://api.themoviedb.org/3/genre/movie/list?api_key={self.key}&language=ko-KR'
 
 
 @api_view(['GET'])
 def movie_list(request):
+    if not Movie.objects.all().exists():
+        url = URLMaker()
+        genre_url = URLMaker()
+        genre_list = requests.get(genre_url.getGenres()).json()
+        genre_dict = {x['id']: x['name'] for x in genre_list['genres']}
+        for i in range(1, 51):
+            movies = requests.get(url.getMovies(i)).json()['results']
+            for temp in movies:
+                new_movie = Movie(
+                    title=temp['title'],
+                    origin_title=temp['original_title'],
+                    poster_path=temp['poster_path'],
+                    overview=temp['overview'],
+                    backdrop_path=temp['backdrop_path'],
+                )
+                new_movie.save()
+                for genre_id in temp['genre_ids']:
+                    if not Genre.objects.filter(id=genre_id).exists():
+                        cur_genre = Genre(
+                            id=genre_id, title=genre_dict[genre_id])
+                        cur_genre.save()
+                    else:
+                        cur_genre = Genre.objects.get(id=genre_id)
+                    new_movie.genres.add(cur_genre.id)
+
     movies = Movie.objects.all()
     serializer = MovieSerializer(movies, many=True)
     return Response(serializer.data)
@@ -20,50 +58,55 @@ def movie_list(request):
 
 @api_view(["GET", "POST"])
 def recommend_movies(request, user_pk):
-    genre_url = URLMaker()
-    genre_json = requests.get(genre_url.getGenres()).json()
-    genre_list = [x['name'] for x in genre_json['genres']]
-    genre_list.sort()
     movies = Movie.objects.none()
-    rank = {}
-    prefer = Prefer.objects.get(pk=user_pk)
-
-    if not Prefer.objects.get(pk=user_pk).exists():
-        Prefer.objects.create(user=user_pk, prefer_movie_genre=[0] * 19)
 
     if request.method == 'POST':
-        selected_movie_genres = request.data['genres']
-        for genre in selected_movie_genres:
-            prefer[genre_list.index(genre)] += 1
-        prefer.save()
-
-    for i in range(19):
-        if prefer[i]:
-            if prefer[i] in rank:
-                rank[prefer[i]].append(i)
+        selected_genres = request.data['genres']
+        for selected in selected_genres:
+            prefer = Prefer.objects.filter(user_id=user_pk, genre_id=selected)
+            if prefer.exists():
+                prefer[0].rank += 1
             else:
-                rank[prefer[i]] = [i]
+                prefer = Prefer(user_id=user_pk, genre_id=selected, rank=1)
+                prefer.save()
 
+    user_prefer = [x.genre_id for x in Prefer.objects.filter(user_id=user_pk)]
     # case 1: most prefer genre
-    if len(rank[max(rank.keys())]) == 1:
-        movies += Movie.objects.filter(genres__contains=genre_list[rank[max(rank.keys())][0]])
+    if len(user_prefer) == 1:
+        temp_movies = Movie.genres.filter(genre_id=user_prefer[0])
+        movies |= temp_movies
         if len(movies) >= 10:
-            serializer = MovieSerializer(random.sample(movies, 10), many=True)
+            pks = random.sample(range(1, len(movies)), 10)
+            movies = movies.filter(id__in=pks)
+            serializer = MovieSerializer(movies,  many=True)
             return Response(serializer.data)
 
     # case 2: contain some genres
-    prefer_genre = reduce(lambda x, m: x + m, rank.values(), [])
-    for i in range(len(prefer_genre), -1, -1):
-        for com in coms(prefer_genre, i):
-            movies += Movie.objects.filter(genres__contains=[genre_list[x] for x in com])
-            if len(movies) >= 10:
-                serializer = MovieSerializer(random.sample(movies, 10), many=True)
-                return Response(serializer.data)
-    pks = random.sample(range(1, 1001), 10 - len(movies))
-    movies = Movie.objects.filter(pk__in=pks)
+    if user_prefer:
+        for i in range(len(user_prefer), 0, -1):
+            for com in coms(user_prefer, i):
+                temp_movies = Movie.objects.all()
+                for cur_genre in com:
+                    temp_movies = temp_movies.filter(genres=cur_genre)
+                movies |= temp_movies
+                if len(movies) >= 10:
+                    pks = random.sample(range(1, len(movies)), 10)
+                    temp_movies = movies.filter(id__in=pks)
+                    serializer = MovieSerializer(temp_movies,  many=True)
+                    return Response(serializer.data)
+
+    pks = random.sample(range(1, 1000), 10 - len(movies))
+    temp_movies = Movie.objects.filter(id__in=pks)
+    movies |= temp_movies
     serializer = MovieSerializer(movies, many=True)
     return Response(serializer.data)
 
 
-def search_movies(request):
-    pass
+def search_movies(request, target):
+    target_words = target.strip().split()
+    movie = Movie.objects.none()
+    for i in range(len(target_words), 0, -1):
+        for com in coms(target_words, i):
+            movie |= Movie.objects.filter(title__contains=list(com))
+    serializer = MovieSerializer(movie, many=True)
+    return Response(serializer.data)

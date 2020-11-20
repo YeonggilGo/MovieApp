@@ -1,4 +1,3 @@
-import json
 import requests
 
 
@@ -19,24 +18,18 @@ url = URLMaker()
 genre_url = URLMaker()
 genre_list = requests.get(genre_url.getGenres()).json()
 genre_dict = {x['id']: x['name'] for x in genre_list['genres']}
-data = []
-cnt = 0
-for i in range(1, 51):
-    movies = requests.get(url.getMovies(i)).json()['results']
-    for temp in movies:
-        cnt += 1
-        input_data = {
-            "model": "movies.Movie",
-            "pk": cnt,
-            'fields': {
-                'title': temp['title'],
-                'origin_title': temp['original_title'],
-                'poster_path': temp['poster_path'],
-                'genres': [genre_dict[genre_id] for genre_id in temp['genre_ids']],
-                'overview': temp['overview'],
-                'backdrop_path': temp['backdrop_path'],
-            }
-        }
-        data.append(input_data)
-with open("movies.json", "w", -1, "UTF-8") as outfile:
-    json.dump(data, outfile, ensure_ascii=False)
+print(genre_dict)
+# cnt = 0
+# for i in range(1, 51):
+#     movies = requests.get(url.getMovies(i)).json()['results']
+#     for temp in movies:
+#         Movie.objects.create(
+#             title=temp['title'],
+#             origin_title=temp['original_title'],
+#             poster_path=temp['poster_path'],
+#             overview=temp['overview'],
+#             backdrop_path=temp['backdrop_path'],
+#         )
+#         for genre_id in temp['genre_ids']:
+#             Movie.objects.get(title=temp['title']).movie_genres.add(genre_dict[gei])
+#             genres=[genre_dict[genre_id] for genre_id in temp['genre_ids']],
