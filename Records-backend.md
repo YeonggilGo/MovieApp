@@ -181,3 +181,137 @@ def search_movies(request, target):
 ### results
 
 ![image-20201120161009068](Records-backend.assets/image-20201120161009068.png)
+
+
+
+<hr>
+
+## 1123
+
+### Modify Movie Data, Model
+
+```python
+class Movie(models.Model):
+    title = models.CharField(max_length=100)
+    origin_title = models.CharField(max_length=100)
+    overview = models.CharField(max_length=1000)
+    genres = models.ManyToManyField(Genre, related_name='genre_movie')
+    poster_path = models.CharField(max_length=500)
+    backdrop_path = models.CharField(max_length=500, null=True, blank=True)
+    popularity = models.FloatField()
+    vote_count = models.IntegerField()
+    video = models.BooleanField()
+    adult = models.BooleanField()
+    origin_language = models.CharField(max_length=10)
+    vote_average = models.FloatField()
+    release_date = models.CharField(max_length=20)
+    
+# movies/views.py
+...
+new_movie = Movie(
+                    title=temp['title'],
+                    origin_title=temp['original_title'],
+                    poster_path=temp['poster_path'],
+                    overview=temp['overview'],
+                    backdrop_path=temp['backdrop_path'],
+                    popularity=temp['popularity'],
+                    vote_count=temp['vote_count'],
+                    video=temp['video'],
+                    adult=temp['adult'],
+                    origin_language=temp['origin_language'],
+                    vote_average=temp['vote_average'],
+                    release_date=temp['release_date']
+                )
+...
+```
+
+
+
+### Movie List pagination
+
+```python
+# movies/views.py
+...
+    movies = Movie.objects.all()
+    if len(movies) // 20 < page:
+        content = {'Error': 'Unavailable page number'}
+        return Response(content, status=status.HTTP_404_NOT_FOUND)
+    else:
+        movie = movies[(page - 1) * 20:page * 20]
+    serializer = MovieSerializer(movies, many=True)
+    return Response(serializer.data)
+...
+```
+
+
+
+### Get popular Movies
+
+```python
+# movies/views.py
+@api_view(["GET"])
+def popular_movies(request):
+    movies = Movie.objects.order_by('popularity')[:20]
+    serializer = MovieSerializer(movies, many=True)
+    return Response(serializer.data)
+```
+
+
+
+### Get specific genre of movie
+
+```python
+# movies/views.py
+@api_view(["GET"])
+def genre_movies(request, genre):
+    genre_url = URLMaker()
+    genre_list = requests.get(genre_url.getGenres()).json()
+    genre_dict = {x['name']: x['id'] for x in genre_list['genres']}
+    movies = Movie.objects.filter(genres=genre_dict[genre])
+    serializer = MovieSerializer(movies, many=True)
+    return Response(serializer.data)
+```
+
+
+
+### Get detail of movie
+
+```python
+@api_view(["GET"])
+def movie_detail(request, movie_pk):
+    movie = Movie.objects.get(pk=movie_pk)
+    serializer = MovieSerializer(movie)
+    return Response(serializer.data)
+```
+
+
+
+### Community Modeling
+
+```python
+class Article(models.Model):
+    title = models.CharField(max_length=100)
+    content = models.TextField()
+    like_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='like_reviews')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
+                             on_delete=models.CASCADE)
+
+
+class Comment(models.Model):
+    content = models.CharField(max_length=100)
+    article = models.ForeignKey(Article, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE)
+```
+
+> - CRUD
+> - Comment CRUD
+> - like system
+
+
+
+### results
+
+![image-20201123155122702](Records-backend.assets/image-20201123155122702.png)
+

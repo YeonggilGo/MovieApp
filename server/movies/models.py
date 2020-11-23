@@ -29,12 +29,3 @@ class Prefer(models.Model):
     genre_id = models.IntegerField()
     rank = models.IntegerField()
 
-
-"popularity": 1307.787,
-"vote_count": 209,
- "video": false,
-  "id": 671039,
-  "adult": false,
-   "original_language": "fr",
-    "vote_average": 6,
-    "release_date": "2020-10-30"
