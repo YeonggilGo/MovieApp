@@ -1,5 +1,10 @@
 from functools import reduce
 
-a = {1: [1, 2, 3], 2: [4, 5, 6]}
-print(list(a.values()))
-print(reduce(lambda x, m: x + m, list(a.values()), []))
+keys = [3, 2, 1]
+user_prefer = {
+    1: [18, 53],
+    2: [28, 33],
+    3: [11, 3],
+}
+for i in range(1, len(keys)):
+    print(i, reduce(lambda x, m: x + m, [user_prefer[j] for j in keys[:i]], []), sep=':')

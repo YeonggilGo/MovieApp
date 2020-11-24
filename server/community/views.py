@@ -24,7 +24,6 @@ def article_list_create(request):
         serializer = ArticleSerializer(articles, many=True)
         return Response(serializer.data)
 
-
 @api_view(['GET'])
 def article_detail(request, article_pk):
     article = Article.objects.get(pk=article_pk)
@@ -57,16 +56,16 @@ def comments_delete(request, comment_pk):
 @api_view(['POST'])
 @authentication_classes([JSONWebTokenAuthentication])
 @permission_classes([IsAuthenticated])
-def like(request, article_pk):
+def article_like(request, article_pk):
     article = get_object_or_404(Article, pk=article_pk)
     if article.like_users.filter(pk=request.user.pk).exists():
-        article.like_users.remove(request.user)
+        article.like_users.remove(request.user.pk)
         liked = False
     else:
-        article.like_users.add(request.user)
+        article.like_users.add(request.user.pk)
         liked = True
     like_status = {
         'liked': liked,
-        'count': Article.like_users.count(),
+        'count': article.like_users.count(),
     }
     return Response(like_status)

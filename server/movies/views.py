@@ -1,12 +1,21 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
+from rest_framework.decorators import authentication_classes, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
+from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
+from django.db.models import Q
+
+import operator
 import requests
 import random
 from itertools import combinations as coms
+from functools import reduce
 
-from .models import Movie, Prefer, Genre
+from .models import Movie, Genre
 from .serializers import MovieSerializer
 
 
@@ -34,18 +43,18 @@ def movie_list(request, page):
             movies = requests.get(url.getMovies(i)).json()['results']
             for temp in movies:
                 new_movie = Movie(
-                    title=temp['title'],
-                    origin_title=temp['original_title'],
-                    poster_path=temp['poster_path'],
-                    overview=temp['overview'],
-                    backdrop_path=temp['backdrop_path'],
-                    popularity=temp['popularity'],
-                    vote_count=temp['vote_count'],
-                    video=temp['video'],
-                    adult=temp['adult'],
-                    origin_language=temp['origin_language'],
-                    vote_average=temp['vote_average'],
-                    release_date=temp['release_date']
+                    title=temp.get('title'),
+                    origin_title=temp.get('original_title'),
+                    poster_path=temp.get('poster_path'),
+                    overview=temp.get('overview'),
+                    backdrop_path=temp.get('backdrop_path'),
+                    popularity=temp.get('popularity'),
+                    vote_count=temp.get('vote_count'),
+                    video=temp.get('video'),
+                    adult=temp.get('adult'),
+                    origin_language=temp.get('original_language'),
+                    vote_average=temp.get('vote_average'),
+                    release_date=temp.get('release_date')
                 )
                 new_movie.save()
                 for genre_id in temp['genre_ids']:
@@ -53,33 +62,35 @@ def movie_list(request, page):
                         cur_genre = Genre(
                             id=genre_id, title=genre_dict[genre_id])
                         cur_genre.save()
-                    else:
-                        cur_genre = Genre.objects.get(id=genre_id)
-                    new_movie.genres.add(cur_genre.id)
+                    new_movie.genres.add(genre_id)
 
     movies = Movie.objects.all()
     if len(movies) // 20 < page:
         content = {'Error': 'Unavailable page number'}
         return Response(content, status=status.HTTP_404_NOT_FOUND)
     else:
-        movie = movies[(page - 1) * 20:page * 20]
+        movies = movies[(page - 1) * 20:page * 20]
     serializer = MovieSerializer(movies, many=True)
     return Response(serializer.data)
 
 
 @api_view(["GET"])
 def popular_movies(request):
-    movies = Movie.objects.order_by('popularity')[:20]
+    movies = Movie.objects.order_by('popularity')
+    pks = random.sample([movie.id for idx, movie in enumerate(movies) if idx < 40], 20)
+    movies = movies.filter(pk__in=pks)
     serializer = MovieSerializer(movies, many=True)
     return Response(serializer.data)
 
 
 @api_view(["GET"])
-def genre_movies(request, genre):
-    genre_url = URLMaker()
-    genre_list = requests.get(genre_url.getGenres()).json()
-    genre_dict = {x['name']: x['id'] for x in genre_list['genres']}
-    movies = Movie.objects.filter(genres=genre_dict[genre])
+def genre_movies(request, genre_id, page):
+    movies = Movie.objects.filter(genres=genre_id)
+    if len(movies) // 20 < page:
+        content = {'Error': 'Unavailable page number'}
+        return Response(content, status=status.HTTP_404_NOT_FOUND)
+    else:
+        movies = movies[(page - 1) * 20:page * 20]
     serializer = MovieSerializer(movies, many=True)
     return Response(serializer.data)
 
@@ -91,58 +102,82 @@ def movie_detail(request, movie_pk):
     return Response(serializer.data)
 
 
-@api_view(["GET", "POST"])
+@api_view(["GET"])
 def recommend_movies(request, user_pk):
     movies = Movie.objects.none()
+    if request.user.is_authenticated:
+        user = get_object_or_404(get_user_model(), pk=user_pk)
+        like_movies = user.like_movies.all()
+        if like_movies.exists():
+            prefer_dict = {}
+            for movie in like_movies:
+                for genre in movie.genres.all():
+                    if genre.id in prefer_dict:
+                        prefer_dict[genre.id] += 1
+                    else:
+                        prefer_dict[genre.id] = 1
 
-    if request.method == 'POST':
-        selected_genres = request.data['genres']
-        for selected in selected_genres:
-            prefer = Prefer.objects.filter(user_id=user_pk, genre_id=selected)
-            if prefer.exists():
-                prefer[0].rank += 1
-            else:
-                prefer = Prefer(user_id=user_pk, genre_id=selected, rank=1)
-                prefer.save()
+            user_prefer = {}
+            for key, value in prefer_dict.items():
+                if value in user_prefer:
+                    user_prefer[value].append(key)
+                else:
+                    user_prefer[value] = [key]
+            keys = sorted(list(user_prefer.keys()), reverse=True)
+            if user_prefer:
+                for i in range(0, len(keys)):
+                    temp_genres = reduce(lambda x, m: x + m, [user_prefer[keys[j]] for j in range(i + 1)], [])
+                    for j in range(len(temp_genres), 0, -1):
+                        for com in coms(temp_genres, j):
+                            temp_movies = Movie.objects.all()
+                            for cur_genre in com:
+                                temp_movies = temp_movies.filter(genres=cur_genre)
+                            movies |= temp_movies
+                        if len(movies) >= 24:
+                            pks = random.sample([x.id for x in movies], 12)
+                            temp_movies = movies.filter(id__in=pks).order_by('?')
+                            serializer = MovieSerializer(temp_movies, many=True)
+                            return Response(serializer.data)
 
-    user_prefer = [x.genre_id for x in Prefer.objects.filter(user_id=user_pk)]
-    # case 1: most prefer genre
-    if len(user_prefer) == 1:
-        temp_movies = Movie.genres.filter(genre_id=user_prefer[0])
-        movies |= temp_movies
-        if len(movies) >= 10:
-            pks = random.sample(range(1, len(movies)), 10)
-            movies = movies.filter(id__in=pks)
-            serializer = MovieSerializer(movies, many=True)
-            return Response(serializer.data)
-
-    # case 2: contain some genres
-    if user_prefer:
-        for i in range(len(user_prefer), 0, -1):
-            for com in coms(user_prefer, i):
-                temp_movies = Movie.objects.all()
-                for cur_genre in com:
-                    temp_movies = temp_movies.filter(genres=cur_genre)
-                movies |= temp_movies
-                if len(movies) >= 10:
-                    pks = random.sample(range(1, len(movies)), 10)
-                    temp_movies = movies.filter(id__in=pks)
-                    serializer = MovieSerializer(temp_movies, many=True)
-                    return Response(serializer.data)
-
-    pks = random.sample(range(1, 1000), 10 - len(movies))
+    pks = random.sample(range(2467, 3467), 12 - len(movies))
     temp_movies = Movie.objects.filter(id__in=pks)
     movies |= temp_movies
+    movies = movies.order_by('?')
     serializer = MovieSerializer(movies, many=True)
     return Response(serializer.data)
 
 
 @api_view(['GET'])
-def search_movies(request, target):
-    target_words = target.strip().split()
+def search_movies(request):
+    target = request.data['word']
+    target_words = target.split()
+    target_words = [word.strip() for word in target_words]
     movie = Movie.objects.none()
     for i in range(len(target_words), 0, -1):
         for com in coms(target_words, i):
-            movie |= Movie.objects.filter(title__contains=list(com))
+            movie |= Movie.objects.filter(reduce(operator.and_, (Q(title__contains=x) for x in com)))
+            movie |= Movie.objects.filter(reduce(operator.and_, (Q(origin_title__contains=x) for x in com)))
+    if len(movie) == 0:
+        return Response({'error': 'Not fount'}, status=status.HTTP_404_NOT_FOUND)
     serializer = MovieSerializer(movie, many=True)
     return Response(serializer.data)
+
+
+@api_view(['POST'])
+def movie_like(request, movie_pk):
+    movie = get_object_or_404(Movie, pk=movie_pk)
+    movie.save()
+    user = get_object_or_404(get_user_model(), pk=request.user.id)
+    if movie.like_users.filter(id=request.user.id).exists():
+        movie.like_users.remove(user)
+        liked = False
+    else:
+        movie.like_users.add(user)
+        liked = True
+
+    like_status = {
+        'liked': liked,
+        'like_count': movie.like_users.count(),
+    }
+
+    return Response(like_status)
