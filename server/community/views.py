@@ -6,7 +6,6 @@ from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
-from django.contrib.auth import get_user_model
 
 from .models import Comment, Article
 from .serializer import ArticleSerializer, CommentSerializer
@@ -15,13 +14,14 @@ from .serializer import ArticleSerializer, CommentSerializer
 @api_view(['GET', 'POST'])
 # @authentication_classes([JSONWebTokenAuthentication])
 # @permission_classes([IsAuthenticated])
-def article_list_create(request, page):
+def article_list_create(request):
     if request.method == 'POST':
         serializer = ArticleSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save(user=request.user, username=request.user.username)
             return Response(serializer.data)
     else:
+        page = request.data['page']
         articles = Article.objects.all()[(page - 1) * 10:page * 10]
         cnt_articles = Article.objects.count()
         serializer = [ArticleSerializer(articles, many=True).data, {
