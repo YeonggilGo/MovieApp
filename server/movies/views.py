@@ -130,7 +130,7 @@ def recommend_movies(request):
                             serializer = MovieSerializer(temp_movies, many=True)
                             return Response(serializer.data)
 
-    pks = random.sample(range(2467, 3467), 12 - len(movies))
+    pks = random.sample(range(1, 1000), 12 - len(movies))
     temp_movies = Movie.objects.filter(id__in=pks)
     movies |= temp_movies
     movies = movies.order_by('?')

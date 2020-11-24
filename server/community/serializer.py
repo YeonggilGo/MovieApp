@@ -6,10 +6,10 @@ class ArticleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Article
-        fields = ('id', 'title', 'content', 'like_users')
+        fields = ('id', 'title', 'content', 'user', 'username')
 
 
-class CommentSeializer(serializers.ModelSerializer):
+class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         motel = Comment

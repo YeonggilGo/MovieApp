@@ -6,28 +6,34 @@ from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
+from django.contrib.auth import get_user_model
+
 from .models import Comment, Article
-from .serializer import ArticleSerializer, CommentSeializer
+from .serializer import ArticleSerializer, CommentSerializer
 
 
 @api_view(['GET', 'POST'])
-@authentication_classes([JSONWebTokenAuthentication])
-@permission_classes([IsAuthenticated])
-def article_list_create(request):
+# @authentication_classes([JSONWebTokenAuthentication])
+# @permission_classes([IsAuthenticated])
+def article_list_create(request, page):
     if request.method == 'POST':
-        serializer = ArticleSerializer(request.data)
+        serializer = ArticleSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            serializer.save(user=request.user)
+            serializer.save(user=request.user, username=request.user.username)
             return Response(serializer.data)
     else:
-        articles = Article.objects.all()
-        serializer = ArticleSerializer(articles, many=True)
-        return Response(serializer.data)
+        articles = Article.objects.all()[(page - 1) * 10:page * 10]
+        cnt_articles = Article.objects.count()
+        serializer = [ArticleSerializer(articles, many=True).data, {
+            'cnt_articles': cnt_articles,
+        }]
+        return Response(serializer)
+
 
 @api_view(['GET'])
 def article_detail(request, article_pk):
     article = Article.objects.get(pk=article_pk)
-    serializer = ArticleSerializer(article)
+    serializer = ArticleSerializer(data=article)
     if serializer.is_valid(raise_exception=True):
         return Response(serializer.data)
 
@@ -37,7 +43,7 @@ def article_detail(request, article_pk):
 @permission_classes([IsAuthenticated])
 def comment_create(request, article_pk):
     article = get_object_or_404(Article, pk=article_pk)
-    serializer = CommentSeializer(request.data)
+    serializer = CommentSerializer(request.data)
     if serializer.is_valid(raise_exception=True):
         serializer.save(user=request.user, article=article)
         return Response(serializer.data)
@@ -51,21 +57,3 @@ def comments_delete(request, comment_pk):
     if request.user == comment.user:
         comment.delete()
     return
-
-
-@api_view(['POST'])
-@authentication_classes([JSONWebTokenAuthentication])
-@permission_classes([IsAuthenticated])
-def article_like(request, article_pk):
-    article = get_object_or_404(Article, pk=article_pk)
-    if article.like_users.filter(pk=request.user.pk).exists():
-        article.like_users.remove(request.user.pk)
-        liked = False
-    else:
-        article.like_users.add(request.user.pk)
-        liked = True
-    like_status = {
-        'liked': liked,
-        'count': article.like_users.count(),
-    }
-    return Response(like_status)
