@@ -33,7 +33,7 @@ class URLMaker:
 
 
 @api_view(['GET'])
-def movie_list(request, page):
+def movie_list(request):
     if not Movie.objects.all().exists():
         url = URLMaker()
         genre_url = URLMaker()
@@ -65,11 +65,6 @@ def movie_list(request, page):
                     new_movie.genres.add(genre_id)
 
     movies = Movie.objects.all()
-    if len(movies) // 20 < page:
-        content = {'Error': 'Unavailable page number'}
-        return Response(content, status=status.HTTP_404_NOT_FOUND)
-    else:
-        movies = movies[(page - 1) * 20:page * 20]
     serializer = MovieSerializer(movies, many=True)
     return Response(serializer.data)
 
@@ -84,13 +79,8 @@ def popular_movies(request):
 
 
 @api_view(["GET"])
-def genre_movies(request, genre_id, page):
+def genre_movies(request, genre_id,):
     movies = Movie.objects.filter(genres=genre_id)
-    if len(movies) // 20 < page:
-        content = {'Error': 'Unavailable page number'}
-        return Response(content, status=status.HTTP_404_NOT_FOUND)
-    else:
-        movies = movies[(page - 1) * 20:page * 20]
     serializer = MovieSerializer(movies, many=True)
     return Response(serializer.data)
 
@@ -103,9 +93,10 @@ def movie_detail(request, movie_pk):
 
 
 @api_view(["GET"])
-def recommend_movies(request, user_pk):
+def recommend_movies(request):
     movies = Movie.objects.none()
     if request.user.is_authenticated:
+        user_pk = request.user.pk
         user = get_object_or_404(get_user_model(), pk=user_pk)
         like_movies = user.like_movies.all()
         if like_movies.exists():
