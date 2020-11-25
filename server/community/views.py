@@ -16,11 +16,12 @@ from .serializer import ArticleSerializer, CommentSerializer
 @permission_classes([IsAuthenticated])
 def article_list_create(request):
     if request.method == 'POST':
-        article = Article.objects.none()
-        article.title = request.data.title
-        article.content = request.data.content
-        article.user = request.user
-        article.username = request.user.username
+        article = Article.objects.create(
+            title=request.data.title,
+            content=request.data.content,
+            user=request.user,
+            username=request.user.username,
+        )
         article.save()
         serializer = ArticleSerializer(data=article)
         if serializer.is_valid(raise_exception=True):
@@ -104,5 +105,3 @@ def comments_delete(request, comment_pk):
         serializer = CommentSerializer(comment)
         serializer.save()
         return Response(serializer.data)
-
-
