@@ -1,24 +1,27 @@
 from django.shortcuts import get_object_or_404
 
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
-
 from .models import Comment, Article
 from .serializer import ArticleSerializer, CommentSerializer
 
 
 @api_view(['GET', 'POST'])
-# @authentication_classes([JSONWebTokenAuthentication])
-# @permission_classes([IsAuthenticated])
+@authentication_classes([JSONWebTokenAuthentication])
+@permission_classes([IsAuthenticated])
 def article_list_create(request):
     if request.method == 'POST':
-        serializer = ArticleSerializer(data=request.data)
+        data = request.data
+        data['user'] = request.user
+        data['username'] = request.user.username
+        serializer = ArticleSerializer(data=data)
         if serializer.is_valid(raise_exception=True):
-            serializer.save(user=request.user, username=request.user.username)
+            serializer.save()
             return Response(serializer.data)
     else:
         page = request.data['page']
@@ -30,7 +33,31 @@ def article_list_create(request):
         return Response(serializer)
 
 
+@api_view(['GET', 'PUT', ' DELETE'])
+@authentication_classes([JSONWebTokenAuthentication])
+@permission_classes([IsAuthenticated])
+def article_update_delete(request, article_pk):
+    article = get_object_or_404(Article, pk=article_pk)
+    if request.user != article.user:
+        return Response({'error': 'Not available'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    if request.method == 'GET':
+        serializer = ArticleSerializer(article)
+        return Response(serializer.data)
+    elif request.method == 'PUT':
+        article.title = request.data.title
+        article.content = request.data.content
+        serializer = ArticleSerializer(article)
+        serializer.save()
+        return Response(serializer.data)
+    elif request.method == 'DELETE':
+        article.delete()
+        return Response({'id': article_pk})
+
+
 @api_view(['GET'])
+@authentication_classes([JSONWebTokenAuthentication])
+@permission_classes([IsAuthenticated])
 def article_detail(request, article_pk):
     article = Article.objects.get(pk=article_pk)
     serializer = ArticleSerializer(data=article)
@@ -41,19 +68,38 @@ def article_detail(request, article_pk):
 @api_view(['GET', 'POST'])
 @authentication_classes([JSONWebTokenAuthentication])
 @permission_classes([IsAuthenticated])
-def comment_create(request, article_pk):
+def comment_list_create(request, article_pk):
     article = get_object_or_404(Article, pk=article_pk)
-    serializer = CommentSerializer(request.data)
-    if serializer.is_valid(raise_exception=True):
-        serializer.save(user=request.user, article=article)
+    if request.method == 'POST':
+        serializer = CommentSerializer(request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save(user=request.user, article=article)
+            return Response(serializer.data)
+    else:
+        comments = Comment.objects.filter(article=article)
+        serializer = CommentSerializer(comments, many=True)
         return Response(serializer.data)
 
 
-@api_view(['DELETE'])
+@api_view(['GET', 'PUT', 'DELETE'])
 @authentication_classes([JSONWebTokenAuthentication])
 @permission_classes([IsAuthenticated])
 def comments_delete(request, comment_pk):
     comment = get_object_or_404(Comment, pk=comment_pk)
-    if request.user == comment.user:
+
+    if request.user != comment.user:
+        return Response({'error': 'Not available'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    if request.method == 'DELETE':
         comment.delete()
-    return
+        return Response({'id': comment_pk})
+    elif request.method == 'GET':
+        serializer = CommentSerializer(comment)
+        return Response(serializer.data)
+    else:
+        comment.content = request.data.content
+        serializer = CommentSerializer(comment)
+        serializer.save()
+        return Response(serializer.data)
+
+
