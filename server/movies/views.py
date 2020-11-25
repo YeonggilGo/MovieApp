@@ -166,7 +166,7 @@ def recommend_movies(request):
 
 @api_view(['GET'])
 def search_movies(request):
-    target = request.data['word']
+    target = request.GET.get('word')
     target_words = target.split()
     target_words = [word.strip() for word in target_words]
     movies = Movie.objects.none()
