@@ -192,11 +192,12 @@ def search_movies(request):
     if len(movies) == 0:
         return Response({'error': 'Not fount'}, status=status.HTTP_404_NOT_FOUND)
     serializer = MovieSerializer(movies, many=True)
-    serializer.sort()
     return Response(serializer.data)
 
 
 @api_view(['POST'])
+@authentication_classes([JSONWebTokenAuthentication])
+@permission_classes([IsAuthenticated])
 def movie_like(request, movie_pk):
     movie = get_object_or_404(Movie, pk=movie_pk)
     movie.save()
