@@ -16,10 +16,13 @@ from .serializer import ArticleSerializer, CommentSerializer
 @permission_classes([IsAuthenticated])
 def article_list_create(request):
     if request.method == 'POST':
-        data = request.data
-        data['user'] = request.user
-        data['username'] = request.user.username
-        serializer = ArticleSerializer(data=data)
+        article = Article.objects.none()
+        article.title = request.data.title
+        article.content = request.data.content
+        article.user = request.user
+        article.username = request.user.username
+        article.save()
+        serializer = ArticleSerializer(data=article)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data)
