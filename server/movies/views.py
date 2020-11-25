@@ -98,10 +98,12 @@ def genre_movies(request, genre_id, ):
 
 
 @api_view(["GET"])
+@authentication_classes([JSONWebTokenAuthentication])
+@permission_classes([IsAuthenticated])
 def movie_detail(request, movie_pk):
     movie = Movie.objects.get(pk=movie_pk)
-    like = False
-    if Movie.like_users.filter(user_id=request.user.id).exists():
+    liked = False
+    if movie.like_users.filter(id=request.user.id).exists():
         liked = True
     res = [MovieSerializer(movie).data, {'liked': liked}]
     return Response(res)
