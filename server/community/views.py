@@ -14,21 +14,21 @@ from .serializer import ArticleSerializer, CommentSerializer
 @api_view(['GET', 'POST'])
 @authentication_classes([JSONWebTokenAuthentication])
 @permission_classes([IsAuthenticated])
-def article_list_create(request):
+def article_list_create(request, page):
     if request.method == 'POST':
         article = Article.objects.create(
-            title=request.data.title,
-            content=request.data.content,
+            title=request.data['title'],
+            content=request.data['content'],
             user=request.user,
             username=request.user.username,
         )
         article.save()
-        serializer = ArticleSerializer(data=article)
+        serializer = ArticleSerializer(article)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data)
     else:
-        page = request.data['page']
+        page = request.GET.get('page')
         articles = Article.objects.all()[(page - 1) * 10:page * 10]
         cnt_articles = Article.objects.count()
         serializer = [ArticleSerializer(articles, many=True).data, {
