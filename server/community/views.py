@@ -45,7 +45,7 @@ def article_list_create(request):
 @permission_classes([IsAuthenticated])
 def article_update_delete(request, article_pk):
     article = get_object_or_404(Article, pk=article_pk)
-    if request.user != article.user:
+    if request.user.username != article.username:
         return Response({'error': 'Not available'}, status=status.HTTP_401_UNAUTHORIZED)
 
     if request.method == 'GET':
@@ -102,7 +102,7 @@ def comment_list_create(request, article_pk):
 def comments_delete(request, comment_pk):
     comment = get_object_or_404(Comment, pk=comment_pk)
 
-    if request.user != comment.user:
+    if request.user.username != comment.username:
         return Response({'error': 'Not available'}, status=status.HTTP_401_UNAUTHORIZED)
 
     if request.method == 'DELETE':
