@@ -67,9 +67,8 @@ def article_update_delete(request, article_pk):
 @permission_classes([IsAuthenticated])
 def article_detail(request, article_pk):
     article = Article.objects.get(pk=article_pk)
-    serializer = ArticleSerializer(data=article)
-    if serializer.is_valid(raise_exception=True):
-        return Response(serializer.data)
+    serializer = ArticleSerializer(article)
+    return Response(serializer.data)
 
 
 @api_view(['GET', 'POST'])
