@@ -100,8 +100,11 @@ def genre_movies(request, genre_id, ):
 @api_view(["GET"])
 def movie_detail(request, movie_pk):
     movie = Movie.objects.get(pk=movie_pk)
-    serializer = MovieSerializer(movie)
-    return Response(serializer.data)
+    like = False
+    if Movie.like_users.filter(user_id=request.user.id).exists():
+        liked = True
+    res = [MovieSerializer(movie).data, {'liked': liked}]
+    return Response(res)
 
 
 @api_view(["GET"])
