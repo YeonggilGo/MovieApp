@@ -21,7 +21,12 @@ def article_list_create(request):
             content=request.data['content'],
             username=request.user.username,
         )
-        serializer = ArticleSerializer(data=article)
+        data = {
+            'title': request.data['title'],
+            'content': request.data['content'],
+            'username': request.user.username,
+        }
+        serializer = ArticleSerializer(data=data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data)
@@ -74,11 +79,14 @@ def comment_list_create(request, article_pk):
     article = get_object_or_404(Article, pk=article_pk)
     if request.method == 'POST':
         comment = Comment.objects.create(
-            content = request.data['content'],
-            username = request.user.username
+            content=request.data['content'],
+            username=request.user.username
         )
-        comment.save()
-        serializer = CommentSerializer(data=comment)
+        data = {
+            'content': request.data['content'],
+            'username': request.user.username
+        }
+        serializer = CommentSerializer(data=data)
         if serializer.is_valid(raise_exception=True):
             serializer.save(user=request.user, article=article)
             return Response(serializer.data)
