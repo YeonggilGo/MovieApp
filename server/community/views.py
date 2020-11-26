@@ -92,11 +92,10 @@ def comment_list_create(request, article_pk):
         data = {
             'content': request.data['content'],
             'username': request.user.username,
-            'article_id': article.pk
         }
         serializer = CommentSerializer(data=data)
         if serializer.is_valid(raise_exception=True):
-            serializer.save()
+            serializer.save(article=article)
             return Response(serializer.data)
     else:
         comments = Comment.objects.filter(article=article)
@@ -116,15 +115,3 @@ def comments_delete(request, comment_pk):
     if request.method == 'DELETE':
         comment.delete()
         return Response({'id': comment_pk})
-    elif request.method == 'GET':
-        serializer = CommentSerializer(comment)
-        return Response(serializer.data)
-    else:
-        comment.content = request.data['content']
-        data = {
-            'content': request.data['content'],
-        }
-        serializer = CommentSerializer(data=data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return Response(serializer.data)

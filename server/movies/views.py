@@ -222,17 +222,24 @@ def movie_like(request, movie_pk):
 
 
 @api_view(['POST'])
+@authentication_classes([JSONWebTokenAuthentication])
+@permission_classes([IsAuthenticated])
 def review_list_create(request, movie_pk):
     movie = get_object_or_404(Review, pk=movie_pk)
     if request.method == 'POST':
-        review = Review.objects.create(
+        Review.objects.create(
             movie=movie,
             user=request.user,
             content=request.data.content,
             username=request.user.username,
             score=request.data.score
         )
-        serializer = ReviewSerializer(review)
+        data = {
+            'content': request.data.content,
+            'username': request.user.username,
+            'score': request.data.score
+        }
+        serializer = ReviewSerializer(data=data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data)
@@ -242,7 +249,9 @@ def review_list_create(request, movie_pk):
         return Response(serializer.data)
 
 
-@api_view(['POST'])
+@api_view(['GET','PUT','DELETE'])
+@authentication_classes([JSONWebTokenAuthentication])
+@permission_classes([IsAuthenticated])
 def review_update_delete(request, review_pk):
     review = get_object_or_404(Review, pk=review_pk)
 
@@ -258,6 +267,6 @@ def review_update_delete(request, review_pk):
     else:
         review.content = request.data.content
         review.score = request.data.score
+        review.save()
         serializer = ReviewSerializer(review)
-        serializer.save()
         return Response(serializer.data)
