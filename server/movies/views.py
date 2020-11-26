@@ -230,14 +230,16 @@ def review_list_create(request, movie_pk):
         Review.objects.create(
             movie=movie,
             user=request.user,
-            content=request.data.content,
+            content=request.data['content'],
             username=request.user.username,
-            score=request.data.score
+            score=request.data['score']
         )
         data = {
-            'content': request.data.content,
+            'movie': movie,
+            'user': request.user,
+            'content': request.data['content'],
             'username': request.user.username,
-            'score': request.data.score
+            'score': request.data['score']
         }
         serializer = ReviewSerializer(data=data)
         if serializer.is_valid(raise_exception=True):
@@ -249,7 +251,7 @@ def review_list_create(request, movie_pk):
         return Response(serializer.data)
 
 
-@api_view(['GET','PUT','DELETE'])
+@api_view(['GET', 'PUT', 'DELETE'])
 @authentication_classes([JSONWebTokenAuthentication])
 @permission_classes([IsAuthenticated])
 def review_update_delete(request, review_pk):
@@ -265,8 +267,8 @@ def review_update_delete(request, review_pk):
         serializer = ReviewSerializer(review)
         return Response(serializer.data)
     else:
-        review.content = request.data.content
-        review.score = request.data.score
+        review.content = request.data['content']
+        review.score = request.data['score']
         review.save()
         serializer = ReviewSerializer(review)
         return Response(serializer.data)
