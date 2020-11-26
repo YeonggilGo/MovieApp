@@ -1,8 +1,10 @@
 [TOC]
 
-# FINAL PROJECT
+# FINAL PROJECT - GLORYBOX
 
 > Maintainer: 고영길, 안광훈
+>
+> 고(영)길 안(광)훈을 따서 GLORYBOX
 
 
 
@@ -11,11 +13,14 @@
 ## Stack
 
 - Back-end
-  - Django, python, sqlite
 
+  - Django, sqlite
+
+- Front-end
+  
 - Vuejs
-
-- Trello
+  
+- Trello, Gitlab
 
   
 
@@ -81,16 +86,16 @@ accounts
 
 ## Key function
 
-### Movie list
+### 1. Movie list
 
-> - The Movie Database(TMDB) API를 이용하여 인기순 1000개의 데이터를 저장했다. Pagenation을 사용했습니다.
+> - The Movie Database(TMDB) API를 이용하여 인기순 1000개의 데이터를 저장했습니다. Pagenation을 사용했습니다.
 >
-> - 인기 영화 탭(Popular)에서는 데이터베이스에서 인기영화 상위권중에서 랜덤하게 20개를 보여줍니다.
+> - 인기 영화 탭에서는 데이터베이스에서 인기영화 상위권중에서 랜덤하게 20개를 보여줍니다.
 > - 장르 탭에서는 각 장르가 포함되어있는 영화만 보여줍니다.
 
 
 
-### Movie detail, Review
+### 2. Movie detail, Review
 
 > - 영화의 제목, 개봉일, 평점 등 자세한 내용을 보여줍니다.
 > - 유저는 영화에 좋아요를 눌러 선호 영화 목록을 만들 수 있습니다.
@@ -98,7 +103,7 @@ accounts
 
 
 
-### Recommend Movie
+### 3. Recommend Movie
 
 > - 유저의 선호 영화 목록에 기반하여 추천하는 영화 를 보여줍니다. 추천 영화 풀을 생성하여 랜덤하게 항상 12개의 영화를 보여줍니다.
 >
@@ -112,7 +117,7 @@ accounts
 >
 >     - 선호 영화 목록의 영화에 대해서 다음 알고리즘에 따라 추천 영화를 추출하여 추천영화 풀에 추가합니다.
 >
->       1. 선호 영화 목록들의 장르들에 대해 나온 횟수에 따라 장르 랭크를 정합니다..
+>       1. 선호 영화 목록들의 장르들에 대해 나온 횟수에 따라 장르 랭크를 정합니다.
 >       2. 모든 장르들의 조합에 대해 그 장르를 포함하고 있는 영화들을 찾아 풀에 추가합니다. 조합은 랭크가 높은 장르들에 대한 조합부터 고려합니다.
 >       3. 풀의 개수가 36개가 넘어가면 종료합니다.
 >
@@ -122,7 +127,7 @@ accounts
 
 
 
-### Search Movie
+### 4. Search Movie
 
 > - 단어를 입력하면 search algorithm에 따라 부합한 영화 목록을 보여줍니다.
 > - 알고리즘
@@ -133,7 +138,7 @@ accounts
 
 
 
-### Community
+### 5. Community
 
 > - 각 영화에 리뷰를 남길 수 있으므로 자유게시판 형식으로 작성 할 수 있습니다.
 > - 유저는 각 Article에 댓글을 생성 / 삭제 할 수 있습니다.
@@ -158,7 +163,7 @@ accounts
 - Serialize하는 과정에서 One to many field가 오류를 자주 일으켜서 각각 char, int field로 바꾸었다. 그 결과로 정보를 얻어올 때 한번의 과정이 더 생겨서 비효율적이다.
 - sqlite가 arrayfield를 지원하지 않아서 modeling이 더 복잡해졌다. 테이블과 컬럼을 더 줄일 수 있었는데 아쉽다.
 
-
+- Back - Front를 완전히 분담하여 진행하였는데 동시에 일을 시작했고, **각각의 기능 완성 - 테스트**가 아니라 **디자인 기반마련 -> 대부분의 기능 구축 -> 테스트**의 순으로 진행하여 시간을 효율적으로 활용하지 못했다. 각 부분에서 비슷한 에러를 겪었는데 하나의 기능을 먼저 테스트 해봤다면 다음 과정의 시간을 단축 할 수 있었을 것이다.
 
 ### Front-end
 
