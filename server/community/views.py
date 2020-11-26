@@ -16,7 +16,7 @@ from .serializer import ArticleSerializer, CommentSerializer
 @permission_classes([IsAuthenticated])
 def article_list_create(request):
     if request.method == 'POST':
-        article = Article.objects.create(
+        Article.objects.create(
             title=request.data['title'],
             content=request.data['content'],
             username=request.user.username,
@@ -84,13 +84,15 @@ def article_detail(request, article_pk):
 def comment_list_create(request, article_pk):
     article = get_object_or_404(Article, pk=article_pk)
     if request.method == 'POST':
-        comment = Comment.objects.create(
+        Comment.objects.create(
             content=request.data['content'],
-            username=request.user.username
+            username=request.user.username,
+            article = article
         )
         data = {
             'content': request.data['content'],
-            'username': request.user.username
+            'username': request.user.username,
+            'article': article
         }
         serializer = CommentSerializer(data=data)
         if serializer.is_valid(raise_exception=True):
