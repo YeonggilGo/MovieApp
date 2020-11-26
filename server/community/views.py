@@ -54,7 +54,13 @@ def article_update_delete(request, article_pk):
     elif request.method == 'PUT':
         article.title = request.data['title']
         article.content = request.data['content']
-        serializer = ArticleSerializer(article)
+        article.save()
+        data = {
+            'title': request.data['title'],
+            'content': request.data['content'],
+            'username': request.user.username,
+        }
+        serializer = ArticleSerializer(data=data)
         serializer.save()
         return Response(serializer.data)
     elif request.method == 'DELETE':
@@ -111,7 +117,11 @@ def comments_delete(request, comment_pk):
         serializer = CommentSerializer(comment)
         return Response(serializer.data)
     else:
-        comment.content = request.data.content
-        serializer = CommentSerializer(comment)
-        serializer.save()
-        return Response(serializer.data)
+        comment.content = request.data['content']
+        data = {
+            'content': request.data['content'],
+        }
+        serializer = CommentSerializer(data=data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data)
