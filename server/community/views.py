@@ -96,7 +96,7 @@ def comment_list_create(request, article_pk):
         }
         serializer = CommentSerializer(data=data)
         if serializer.is_valid(raise_exception=True):
-            serializer.save(user=request.user, article=article)
+            serializer.save()
             return Response(serializer.data)
     else:
         comments = Comment.objects.filter(article=article)
