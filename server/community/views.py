@@ -61,7 +61,8 @@ def article_update_delete(request, article_pk):
             'username': request.user.username,
         }
         serializer = ArticleSerializer(data=data)
-        serializer.save()
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
         return Response(serializer.data)
     elif request.method == 'DELETE':
         article.delete()
