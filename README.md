@@ -64,7 +64,7 @@ Trello를 이용하여 업무 분담된 Task를 모두 적고 Todo, progressing,
 
 ## ERD
 
-![image-20201126132419952](README.assets/image-20201126132419952.png)
+![image-20201126132419952](README.assets/erd.png)
 
 
 
@@ -84,14 +84,39 @@ accounts
 
 
 
+## Home page
+
+![localhost_8080_](README.assets/home.png)
+
+
+
+
+
 ## Key function
 
 ### 1. Movie list
 
-> - The Movie Database(TMDB) API를 이용하여 인기순 1000개의 데이터를 저장했습니다. Pagenation을 사용했습니다.
->
-> - 인기 영화 탭에서는 데이터베이스에서 인기영화 상위권중에서 랜덤하게 20개를 보여줍니다.
+> - The Movie Database(TMDB) API를 이용하여 인기순 1000개의 데이터를 저장했습니다.
+>- 인기 영화 탭에서는 데이터베이스에서 인기영화 상위권중에서 랜덤하게 20개를 보여줍니다.
 > - 장르 탭에서는 각 장르가 포함되어있는 영화만 보여줍니다.
+
+- 전체 영화
+
+![movies_list](README.assets/movies_list.png)
+
+
+
+- 인기 영화
+
+![image-20201126154856363](README.assets/popular_movies.png)
+
+
+
+- 장르별 영화
+
+![image-20201126155427205](README.assets/genres_movies.png)
+
+
 
 
 
@@ -100,6 +125,10 @@ accounts
 > - 영화의 제목, 개봉일, 평점 등 자세한 내용을 보여줍니다.
 > - 유저는 영화에 좋아요를 눌러 선호 영화 목록을 만들 수 있습니다.
 > - 유저는 영화에 리뷰를 생성  / 수정 / 삭제 할 수 있습니다. 리뷰는 리뷰 내용과 점수가 포함됩니다.
+
+![movie_detail](README.assets/movie_detail.png)
+
+
 
 
 
@@ -125,6 +154,10 @@ accounts
 >
 >       - 풀이 12개가 되지 않으면 나머지를 랜덤한 영화로 채웁니다.
 
+![recommended_movie](README.assets/recommended_movies.png)
+
+
+
 
 
 ### 4. Search Movie
@@ -136,12 +169,28 @@ accounts
 >     - 검색 단어를 단어별로 (띄어쓰기로 구분) 나누어 조합을 생성합니다.
 >     - 각 조합이 영화의 title, original_title, overview에 포함되어 있으면 영화 풀에 추가합니다.
 
+![search](README.assets/search.png)
+
+
+
 
 
 ### 5. Community
 
 > - 각 영화에 리뷰를 남길 수 있으므로 자유게시판 형식으로 작성 할 수 있습니다.
 > - 유저는 각 Article에 댓글을 생성 / 삭제 할 수 있습니다.
+
+- Article List
+
+![image-20201126155847907](README.assets/article_list.png)
+
+
+
+- Article detail
+
+![image-20201126155942758](README.assets/article_detail.png)
+
+
 
 
 
