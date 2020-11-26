@@ -12,5 +12,5 @@ class ArticleSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
-        motel = Comment
-        fields = ('username', 'content', 'created_at', 'updated_at')
+        model = Comment
+        fields = ('username', 'content', 'created_at', 'updated_at', 'article_id')
