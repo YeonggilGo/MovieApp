@@ -18,7 +18,7 @@
 
 - Front-end
   
-- Vuejs
+  - Vuejs
   
 - Trello, Gitlab
 
@@ -52,7 +52,7 @@ Trello를 이용하여 업무 분담된 Task를 모두 적고 Todo, progressing,
 - Green - Back-end
 - Blue - Front-end
 
-![image-20201118162724715](README.assets/image-20201118162724715.png)
+![image-20201118162724715](README.assets/plan.png)
 
 
 
