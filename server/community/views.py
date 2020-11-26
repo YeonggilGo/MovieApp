@@ -87,12 +87,12 @@ def comment_list_create(request, article_pk):
         Comment.objects.create(
             content=request.data['content'],
             username=request.user.username,
-            article = article
+            article=article
         )
         data = {
             'content': request.data['content'],
             'username': request.user.username,
-            'article': article
+            'article_id': article.pk
         }
         serializer = CommentSerializer(data=data)
         if serializer.is_valid(raise_exception=True):
