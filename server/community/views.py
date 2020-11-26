@@ -40,7 +40,7 @@ def article_list_create(request):
         return Response(serializer)
 
 
-@api_view(['GET', 'PUT', ' DELETE'])
+@api_view(['GET', 'PUT', 'DELETE'])
 @authentication_classes([JSONWebTokenAuthentication])
 @permission_classes([IsAuthenticated])
 def article_update_delete(request, article_pk):
@@ -52,8 +52,8 @@ def article_update_delete(request, article_pk):
         serializer = ArticleSerializer(article)
         return Response(serializer.data)
     elif request.method == 'PUT':
-        article.title = request.data.title
-        article.content = request.data.content
+        article.title = request.data['title']
+        article.content = request.data['content']
         serializer = ArticleSerializer(article)
         serializer.save()
         return Response(serializer.data)
