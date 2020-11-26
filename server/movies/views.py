@@ -235,15 +235,13 @@ def review_list_create(request, movie_pk):
             score=request.data['score']
         )
         data = {
-            'movie': movie,
-            'user': request.user,
             'content': request.data['content'],
             'username': request.user.username,
             'score': request.data['score']
         }
         serializer = ReviewSerializer(data=data)
         if serializer.is_valid(raise_exception=True):
-            serializer.save()
+            serializer.save(movie=movie, user=request.user)
             return Response(serializer.data)
     else:
         reviews = Review.objects.filter(movie=movie_pk)
