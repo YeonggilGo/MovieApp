@@ -221,11 +221,11 @@ def movie_like(request, movie_pk):
     return Response(like_status)
 
 
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 @authentication_classes([JSONWebTokenAuthentication])
 @permission_classes([IsAuthenticated])
 def review_list_create(request, movie_pk):
-    movie = get_object_or_404(Review, pk=movie_pk)
+    movie = get_object_or_404(Movie, pk=movie_pk)
     if request.method == 'POST':
         Review.objects.create(
             movie=movie,
@@ -241,8 +241,7 @@ def review_list_create(request, movie_pk):
         }
         serializer = ReviewSerializer(data=data)
         if serializer.is_valid(raise_exception=True):
-            serializer.save(movie=movie, user=request.user)
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
     else:
         reviews = Review.objects.filter(movie=movie_pk)
         serializer = ReviewSerializer(reviews, many=True)

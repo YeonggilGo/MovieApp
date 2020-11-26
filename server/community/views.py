@@ -29,7 +29,7 @@ def article_list_create(request):
         serializer = ArticleSerializer(data=data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
     else:
         page = int(request.GET.get('page'))
         articles = Article.objects.all()[(page - 1) * 10:page * 10]
@@ -96,7 +96,7 @@ def comment_list_create(request, article_pk):
         serializer = CommentSerializer(data=data)
         if serializer.is_valid(raise_exception=True):
             serializer.save(article=article)
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
     else:
         comments = Comment.objects.filter(article=article)
         serializer = CommentSerializer(comments, many=True)

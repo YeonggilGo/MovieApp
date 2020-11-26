@@ -15,5 +15,5 @@ class MovieSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
-        motel = Review
-        fields = ('content', 'score', 'created_at', 'updated_at', 'username')
+        model = Review
+        fields = ('id', 'content', 'score', 'created_at', 'updated_at', 'username')
