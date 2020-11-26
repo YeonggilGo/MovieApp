@@ -251,7 +251,7 @@ def review_list_create(request, movie_pk):
 @api_view(['GET', 'PUT', 'DELETE'])
 @authentication_classes([JSONWebTokenAuthentication])
 @permission_classes([IsAuthenticated])
-def review_update_delete(request, review_pk):
+def review_update_delete(request, movie_pk, review_pk):
     review = get_object_or_404(Review, pk=review_pk)
 
     if request.user != review.user:
