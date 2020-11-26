@@ -10,7 +10,8 @@
 
 ## Stack
 
-- Django, python
+- Back-end
+  - Django, python, sqlite
 
 - Vuejs
 
@@ -143,4 +144,21 @@ accounts
 
 - 모든 유저 인증은 rest_freamwork_jwt token을 사용하여 인증 정보를 확인했습니다.
 - 필요한 부분에서 ajax를 사용하여 비동기 요청을 보냅니다.
+- RESTful한 url을 지향했습니다.
+- 필요한 부분에서 HTTP 상태 코드를 반환합니다.
+
+
+
+## Desired things...
+
+### Back-end
+
+- Search Algorithm에 대해서 한글을 단어별로 구분하기 때문에 형태소에 따른 검색이 어렵다. Elasticsearch plugin의 analysis-nori를 사용하여 형태소 분석을 도입하려고 하였으나 윈도우 환경에서 플러그인 설치에 어려움이 있어 형태소 분석을 적용하지 못했다.
+- Search results가 Serializer를 사용하여 반환하였더니 id순으로 자동 정렬되어 나타난다. 각각 검색 중요도 랭크를 부여하여 정렬하려고 하였으나 serializer의 정렬에 어려움이 있어 검색의 정확도가 떨어진다.
+- Serialize하는 과정에서 One to many field가 오류를 자주 일으켜서 각각 char, int field로 바꾸었다. 그 결과로 정보를 얻어올 때 한번의 과정이 더 생겨서 비효율적이다.
+- sqlite가 arrayfield를 지원하지 않아서 modeling이 더 복잡해졌다. 테이블과 컬럼을 더 줄일 수 있었는데 아쉽다.
+
+
+
+### Front-end
 
